@@ -46,14 +46,10 @@ dockers:
       - cli-proxy-api
     goos: linux
     goarch: amd64
-    dockerfile: Dockerfile
+    dockerfile: Dockerfile.goreleaser
     image_templates:
       - "ghcr.io/sunakier/cli-proxy-api:{{ .Tag }}-amd64"
       - "ghcr.io/sunakier/cli-proxy-api:latest-amd64"
-    build_args:
-      - VERSION={{ .Version }}
-      - COMMIT={{ .ShortCommit }}
-      - BUILD_DATE={{ .Date }}
     skip_push: auto
 
   - id: cli-proxy-api-arm64
@@ -61,14 +57,10 @@ dockers:
       - cli-proxy-api
     goos: linux
     goarch: arm64
-    dockerfile: Dockerfile
+    dockerfile: Dockerfile.goreleaser
     image_templates:
       - "ghcr.io/sunakier/cli-proxy-api:{{ .Tag }}-arm64"
       - "ghcr.io/sunakier/cli-proxy-api:latest-arm64"
-    build_args:
-      - VERSION={{ .Version }}
-      - COMMIT={{ .ShortCommit }}
-      - BUILD_DATE={{ .Date }}
     skip_push: auto
 
 docker_manifests:
