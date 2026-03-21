@@ -50,6 +50,8 @@ dockers:
     image_templates:
       - "ghcr.io/sunakier/cli-proxy-api:{{ .Tag }}-amd64"
       - "ghcr.io/sunakier/cli-proxy-api:latest-amd64"
+    extra_files:
+      - config.example.yaml
     skip_push: auto
 
   - id: cli-proxy-api-arm64
@@ -61,6 +63,8 @@ dockers:
     image_templates:
       - "ghcr.io/sunakier/cli-proxy-api:{{ .Tag }}-arm64"
       - "ghcr.io/sunakier/cli-proxy-api:latest-arm64"
+    extra_files:
+      - config.example.yaml
     skip_push: auto
 
 docker_manifests:
