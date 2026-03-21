@@ -148,13 +148,27 @@ func isQwenQuotaError(body []byte) bool {
 // Only checks for quota errors when httpCode is 403 or 429 to avoid false positives.
 func wrapQwenError(ctx context.Context, httpCode int, body []byte) (errCode int, retryAfter *time.Duration) {
 	errCode = httpCode
-	// Only check quota errors for expected status codes to avoid false positives
-	// Qwen returns 403 for quota errors, 429 for rate limits
-	if (httpCode == http.StatusForbidden || httpCode == http.StatusTooManyRequests) && isQwenQuotaError(body) {
+	// Qwen uses 429 for both RPM/TPM rate limits AND daily quota exhaustion.
+	// The key difference:
+	// - RPM/TPM rate limit: 429 + "insufficient_quota" with message about "current quota" or "token limit"
+	// - Daily quota exhausted: 403 + "insufficient_quota" with message about "daily quota" or "free allocated quota"
+	//
+	// For 429 responses, we treat them as RPM/TPM rate limits (short cooldown) because:
+	// 1. Daily quota (1000/day) is unlikely to be exhausted quickly
+	// 2. Shared RPM/TPM limits across users are more commonly exceeded
+	if httpCode == http.StatusTooManyRequests {
+		// RPM/TPM rate limit - short cooldown, don't mark as daily quota exceeded
+		cooldown := 60 * time.Second
+		retryAfter = &cooldown
+		logWithRequestID(ctx).Debugf("qwen rate limit (RPM/TPM), cooling down for %v", cooldown)
+		return errCode, retryAfter
+	}
+	// Only treat 403 + insufficient_quota as daily quota exhaustion
+	if httpCode == http.StatusForbidden && isQwenQuotaError(body) {
 		errCode = http.StatusTooManyRequests // Map to 429 to trigger quota logic
 		cooldown := timeUntilNextDay()
 		retryAfter = &cooldown
-		logWithRequestID(ctx).Warnf("qwen quota exceeded (http %d -> %d), cooling down until tomorrow (%v)", httpCode, errCode, cooldown)
+		logWithRequestID(ctx).Warnf("qwen daily quota exceeded (http 403 -> 429), cooling down until tomorrow (%v)", cooldown)
 	}
 	return errCode, retryAfter
 }
