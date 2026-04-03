@@ -164,7 +164,7 @@ func wrapQwenError(ctx context.Context, httpCode int, body []byte) (errCode int,
 		// RPM/TPM rate limit - short cooldown, don't mark as daily quota exceeded
 		cooldown := 60 * time.Second
 		retryAfter = &cooldown
-		logWithRequestID(ctx).Debugf("qwen rate limit (RPM/TPM), cooling down for %v", cooldown)
+		helps.LogWithRequestID(ctx).Debugf("qwen rate limit (RPM/TPM), cooling down for %v", cooldown)
 		return errCode, retryAfter
 	}
 	// Only treat 403 + insufficient_quota as daily quota exhaustion
