@@ -3,7 +3,15 @@
 Go 1.26+ proxy server providing OpenAI/Gemini/Claude/Codex compatible APIs with OAuth and round-robin load balancing.
 
 ## Repository
-- GitHub: https://github.com/router-for-me/CLIProxyAPI
+- GitHub (upstream): https://github.com/router-for-me/CLIProxyAPI
+- Fork: https://github.com/Sunakier/CLIProxyAPI
+
+## Fork Notes
+- This fork retains **Qwen (通义千问)** support that was removed by upstream.
+- The remote models URL (`modelsURLs` in `internal/registry/model_updater.go`) points to this repo's `models.json` first, then falls back to upstream.
+- The `models.json` in the repo root is the remote model catalog (upstream + Qwen section). The embedded copy is at `internal/registry/models/models.json`.
+- When updating `models.json` from upstream, **always merge the Qwen section back in** — upstream no longer includes it.
+- The management panel repository (`DefaultPanelGitHubRepository`) points to the fork's frontend: `Sunakier/Cli-Proxy-API-Management-Center`.
 
 ## Commands
 ```bash
