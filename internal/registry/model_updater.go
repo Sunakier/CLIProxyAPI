@@ -121,6 +121,14 @@ func tryRefreshModels(ctx context.Context, label string) {
 		return
 	}
 
+	// Preserve fork-local model sections that are absent from upstream.
+	// When upstream does not include a section (e.g. qwen in this fork),
+	// the parsed result will have an empty slice which would erase the
+	// local definitions. Carry over the old data instead.
+	if len(parsed.Qwen) == 0 && len(oldData.Qwen) > 0 {
+		parsed.Qwen = oldData.Qwen
+	}
+
 	// Detect changes before updating store.
 	changed := detectChangedProviders(oldData, parsed)
 
@@ -334,12 +342,26 @@ func validateModelsCatalog(data *staticModelsJSON) error {
 		{name: "codex-team", models: data.CodexTeam},
 		{name: "codex-plus", models: data.CodexPlus},
 		{name: "codex-pro", models: data.CodexPro},
-		{name: "qwen", models: data.Qwen},
 		{name: "kimi", models: data.Kimi},
 		{name: "antigravity", models: data.Antigravity},
 	}
 
+	optionalSections := []struct {
+		name   string
+		models []*ModelInfo
+	}{
+		{name: "qwen", models: data.Qwen},
+	}
+
 	for _, section := range requiredSections {
+		if err := validateModelSection(section.name, section.models); err != nil {
+			return err
+		}
+	}
+	for _, section := range optionalSections {
+		if len(section.models) == 0 {
+			continue
+		}
 		if err := validateModelSection(section.name, section.models); err != nil {
 			return err
 		}
